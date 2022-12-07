@@ -71,12 +71,19 @@ For文とかと組み合わすと、繰り返し処理で任意のタプル配�
 タプルを配列の中に入れると、ほしい要素のみ過不足なく並んだデータの羅列を作成、表示できる。べんり
  
  
+ present dismiss
+ したからぴゅっと出てくる新規画面（モーダル遷移？）を呼び出せる。
+ よびかた
+ present (インスタンス化したViewController, animated: true, completion: nil))
+ ->ViewControllerが定義する画面を出せる　animated はアニメーション処理の有無　completionは表示完了後の処理（クロージャで指定可能）
  
  */
 
 import UIKit
+import SafariServices
 
-class ViewController: UIViewController, UISearchBarDelegate, UITableViewDataSource{
+
+class ViewController: UIViewController, UISearchBarDelegate, UITableViewDataSource, UITableViewDelegate, SFSafariViewControllerDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,6 +95,9 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDataSour
         searchText.placeholder = "お菓子の名前を入力してください"
         //Table ViewのdataSourceを設定 ViewController内のそっかから引っ張ってtableViewにデータを入れてくれる
         tableView.dataSource = self
+        //Table Viewのdelegateを設定
+        tableView.delegate = self
+        
     }
     
     @IBOutlet weak var searchText: UISearchBar!
@@ -209,7 +219,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDataSour
         //withIdentifierでcell生成先のtableViewを指定、for: indexPathで位置を指定。
         //このdatasourceメソッドは、セルを生成するたびに繰り返し実行され、indexPathに都度位置情報を渡す。
         //その情報をもとにセルが設定されるので、この時点でcellは配列になっている
-        cell = tableView.dequeueReusableCell(withIdentifier: "okashiCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "okashiCell", for: indexPath)
         //お菓子のタイトルを設定　storyboard上 cellオブジェクト上のLabelにtextLabelプロパティが割り当てられているため、そこに名前が入る
         //indexPath.rowで、TableViewの先頭からの行番号を取得している。その数字をインデックスとしてokashiListからタプル配列を呼び出し、
         //タプル配列上　nameに相当する値を　さっき生成された配列cell.textLabelのtextプロパティに代入している。
@@ -230,6 +240,32 @@ class ViewController: UIViewController, UISearchBarDelegate, UITableViewDataSour
         //設定済みのCellオブジェクトに画面を反映
         return cell
     }
+    
+    //Cellが選択されたときに呼び出されるdelegateメソッド
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        //ハイライト解除
+        tableView.deselectRow(at: indexPath, animated: true)
+        //SFSafariViewを開く
+        let safariViewController = SFSafariViewController(url: okashiList[indexPath.row].link)
+        //delegateの通知先を自分自身に設定
+        safariViewController.delegate = self
+        //SafariViewが開かれる
+        present(safariViewController, animated: true, completion: nil)
+    }
+    
+    
+    //Safariが閉じられたときに呼ばれるDelegateメソッド
+    //ちなみにこれ書かなくても普通に動いた　裏で走ってるViewControllerを閉じる？
+    func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+        //SafariViewを閉じる
+        dismiss(animated: true, completion: nil)
+    }
+    
+    
+    
+    
+    
+    
     
     
     
